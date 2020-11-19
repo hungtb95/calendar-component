@@ -21,29 +21,51 @@
 
     <div class="body-calendar">
       <div
-        v-for="i in datetimeInMonth.dayStartInMonth"
-        :key="`empty${i}`"
-        class="day-calendar"
-      ></div>
+        v-for="value in prevDateRange"
+        :key="`empty${value}`"
+        :class="[
+          checkIsWeekend(value, true),
+          checkIsHoliday(value, true),
+          'day-calendar'
+        ]"
+      >
+        <b>{{ value }}</b>
+      </div>
 
       <div
-        v-for="index in datetimeInMonth.daysInMonth"
-        :key="`day${index}`"
-        class="day-calendar"
-        @click="selectDate(index)"
+        v-for="value in datetimeInMonth.daysInMonth"
+        :key="`day${value}`"
+        :class="[
+          checkIsWeekend(value),
+          checkIsHoliday(value),
+          'day-calendar'
+        ]"
+        @click="selectDate(value)"
       >
         <div
           :class="[
             'wrap-day',
-            { now: dateNow === index && isDateTimeNow },
+            { now: dateNow === value && isDateTimeNow },
             {
               'day-active':
-                datetimeInMonth.dayActive === index && isDateTimeDayActive,
+                datetimeInMonth.dayActive === value && isDateTimeDayActive,
             },
           ]"
         >
-          {{ index }}
+          {{ value }}
         </div>
+      </div>
+
+      <div
+        v-for="value in nextDateRange"
+        :key="`empty${value}`"
+        :class="[
+          checkIsWeekend(value, false, true),
+          checkIsHoliday(value, false, true),
+          'day-calendar'
+        ]"
+      >
+        <b>{{ value }}</b>
       </div>
     </div>
   </div>
@@ -61,7 +83,14 @@ export default {
   data() {
     return {
       datetime: this.$dayjs(),
-      dateSelected: this.initValue && this.$dayjs(this.initValue).isValid() ? this.initValue : null
+      dateSelected: this.initValue && this.$dayjs(this.initValue).isValid() ? this.initValue : null,
+      numberRow: 6,
+      holiday: [
+        '2020-12-10',
+        '2020-11-10',
+        '2020-10-13',
+        '2020-09-29'
+      ]
     }
   },
   computed: {
@@ -82,12 +111,36 @@ export default {
     },
     datetimeInMonth() {
       const datetimeInMonth = {
-        dayStartInMonth: this.$dayjs(this.datetime).startOf('month').day(),
         daysInMonth: this.$dayjs(this.datetime).daysInMonth(),
         dayActive: this.$dayjs(this.dateSelected).date()
       }
 
       return datetimeInMonth
+    },
+    dateOfPrevMonth() {
+      const dayStartOfMonth = this.$dayjs(this.datetime).startOf('month').day()
+      const dateOfPrevMonth = this.$dayjs(this.datetime).subtract(1, 'month').endOf('month')
+
+      const result = dateOfPrevMonth.subtract(dayStartOfMonth - 1, 'day').format('YYYY-MM-DD')
+
+      return result
+    },
+    startDateOfCurrentMonth() {
+      return this.$dayjs(this.datetime).startOf('month').format('YYYY-MM-DD')
+    },
+    prevDateRange() {
+      if (this.dateOfPrevMonth === this.startDateOfCurrentMonth) return []
+      const from = this.$dayjs(this.dateOfPrevMonth).get('date')
+      const to = this.$dayjs(this.dateOfPrevMonth).endOf('month').get('date')
+
+      return Array.from({ length: to - from + 1 }, (v, k) => k + from)
+    },
+    nextDateRange() {
+      const numberDaysOfMonth = this.$dayjs(this.datetime).daysInMonth()
+      const numberPrevDate = this.prevDateRange.length
+      const numberNextDate = (this.numberRow * 7) - numberPrevDate - numberDaysOfMonth
+
+      return numberNextDate
     }
   },
   methods: {
@@ -107,12 +160,47 @@ export default {
       ).toDate()
 
       this.$emit('dateSelected', this.dateSelected)
+    },
+    checkIsWeekend(date, isPrev = false, isNext = false) {
+      let datetimeFormat = ''
+      if (isPrev) datetimeFormat = this.$dayjs(this.datetime).subtract(1, 'month').format('YYYY-MM')
+      if (isNext) datetimeFormat = this.$dayjs(this.datetime).add(1, 'month').format('YYYY-MM')
+      if (!isNext && !isPrev) datetimeFormat = this.$dayjs(this.datetime).format('YYYY-MM')
+      const dayNumber = this.$dayjs(
+        `${datetimeFormat}-${date}`,
+        'YYYY-MM-D'
+      ).day()
+
+      let className = ''
+      if (dayNumber === 0) className = 'is-sunday'
+      if (dayNumber === 6) className = 'is-saturday'
+
+      return className
+    },
+    checkIsHoliday(date, isPrev = false, isNext = false) {
+      let datetimeFormat = ''
+      if (isPrev) datetimeFormat = this.$dayjs(this.datetime).subtract(1, 'month').format('YYYY-MM')
+      if (isNext) datetimeFormat = this.$dayjs(this.datetime).add(1, 'month').format('YYYY-MM')
+      if (!isNext && !isPrev) datetimeFormat = this.$dayjs(this.datetime).format('YYYY-MM')
+      const dateStr = this.$dayjs(
+        `${datetimeFormat}/${date}`,
+        'YYYY-MM-D'
+      ).format('YYYY-MM-DD')
+
+      return this.holiday.includes(dateStr) ? 'is-holiday' : ''
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
+.is-saturday {
+  background: #edf9ff;
+}
+.is-holiday,
+.is-sunday {
+  background: #ffeded;
+}
 .wrap-calendar-left {
   // padding-bottom: 20px;
   margin-bottom: 26px;
