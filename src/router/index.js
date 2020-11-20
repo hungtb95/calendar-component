@@ -11,12 +11,14 @@ const routes = [
     component: Home
   },
   {
-    path: '/calendar',
-    name: 'Calendar',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/Calendar.vue')
+    path: '/week-calendar',
+    name: 'WeekCalendar',
+    component: () => import(/* webpackChunkName: "about" */ '../views/WeekCalendar.vue')
+  },
+  {
+    path: '/month-calendar',
+    name: 'MonthCalendar',
+    component: () => import(/* webpackChunkName: "about" */ '../views/MonthCalendar.vue')
   },
   {
     path: '/datepicker',

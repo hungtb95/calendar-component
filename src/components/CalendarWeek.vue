@@ -4,11 +4,11 @@
       <span class="month-year-title mr-auto ml-auto">
         {{ $dayjs(this.datetime).format('YYYY年MM月DD日 (ddd)') }}
       </span>
-      <div class="div-img-calendar" @click="preMonth">
+      <div class="div-img-calendar" @click="preWeek">
         <img src="../assets/images/prev-month.png" alt srcset />
       </div>
       <button class="btn__today" @click="today">今日</button>
-      <div class="div-img-calendar" @click="nextMonth">
+      <div class="div-img-calendar" @click="nextWeek">
         <img src="../assets/images/next-month.png" alt srcset />
       </div>
     </div>
@@ -26,73 +26,41 @@
 
       <div class="body-calendar">
         <div
-          v-for="value in prevDateRange"
-          :key="`empty${value}`"
+          v-for="(value, index) in dateWeekRange"
+          :key="index"
           :class="[
-            checkIsWeekend(value, true),
-            checkIsHoliday(value, true),
-            'day-calendar'
-          ]"
-        >
-          <div class="box">
-            <div class="box__day">
-              <b>{{ value }}</b>
-            </div>
-            <div class="box__info"></div>
-          </div>
-        </div>
-
-        <div
-          v-for="value in datetimeInMonth.daysInMonth"
-          :key="`day${value}`"
-          :class="[
-            checkIsWeekend(value),
+            'day-calendar',
             checkIsHoliday(value),
-            'day-calendar'
+            checkIsWeekend(value),
+            { 'is-now': dateNow === value.date() && isDateTimeNow }
           ]"
           @click="selectDate(value)"
         >
           <div
             :class="[
               'box',
-              { now: dateNow === value && isDateTimeNow },
               {
-                'day-active':
-                  datetimeInMonth.dayActive === value && isDateTimeDayActive,
+                'day-active': datetimeInMonth.dayActive === value.date() && isDateTimeDayActive,
               },
             ]"
           >
             <div class="box__day">
-              <b>{{ value }}</b>
+              <b>{{ value.get('date') }}</b>
             </div>
             <div class="box__info"></div>
           </div>
         </div>
 
-        <div
-          v-for="value in nextDateRange"
-          :key="`empty${value}`"
-          :class="[
-            checkIsWeekend(value, false, true),
-            checkIsHoliday(value, false, true),
-            'day-calendar'
-          ]"
-        >
-          <div class="box">
-            <div class="box__day">
-              <b>{{ value }}</b>
-            </div>
-            <div class="box__info"></div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+const HOLIDAY_DATE_FORMAT = 'YYYY-MM-DD'
+
 export default {
-  name: 'CalendarMonth',
+  name: 'CalendarWeek',
   props: {
     initValue: {
       type: Date,
@@ -140,39 +108,23 @@ export default {
 
       return datetimeInMonth
     },
-    dateOfPrevMonth() {
-      const dayStartOfMonth = this.$dayjs(this.datetime).startOf('month').day()
-      const dateOfPrevMonth = this.$dayjs(this.datetime).subtract(1, 'month').endOf('month')
+    dateWeekRange() {
+      const dateWeekArr = []
+      for (let index = 0; index <= 6; index++) {
+        const date = this.$dayjs(this.datetime).day(index)
+        dateWeekArr.push(date)
+      }
 
-      const result = dateOfPrevMonth.subtract(dayStartOfMonth - 1, 'day').format('YYYY-MM-DD')
-
-      return result
-    },
-    startDateOfCurrentMonth() {
-      return this.$dayjs(this.datetime).startOf('month').format('YYYY-MM-DD')
-    },
-    prevDateRange() {
-      if (this.dateOfPrevMonth === this.startDateOfCurrentMonth) return []
-      const from = this.$dayjs(this.dateOfPrevMonth).get('date')
-      const to = this.$dayjs(this.dateOfPrevMonth).endOf('month').get('date')
-
-      return Array.from({ length: to - from + 1 }, (v, k) => k + from)
-    },
-    nextDateRange() {
-      const numberDaysOfMonth = this.$dayjs(this.datetime).daysInMonth()
-      const numberPrevDate = this.prevDateRange.length
-      const numberNextDate = (this.numberRow * 7) - numberPrevDate - numberDaysOfMonth
-
-      return numberNextDate
+      return dateWeekArr
     }
   },
   methods: {
-    nextMonth() {
-      this.datetime = this.$dayjs(this.datetime).add(1, 'month').toDate()
+    nextWeek() {
+      this.datetime = this.$dayjs(this.datetime).add(1, 'week').toDate()
     },
 
-    preMonth() {
-      this.datetime = this.$dayjs(this.datetime).subtract(1, 'month').toDate()
+    preWeek() {
+      this.datetime = this.$dayjs(this.datetime).subtract(1, 'week').toDate()
     },
 
     today() {
@@ -180,24 +132,13 @@ export default {
     },
 
     selectDate(date) {
-      const datetimeFormat = this.$dayjs(this.datetime).format('YYYY/MM')
-      this.dateSelected = this.$dayjs(
-        `${datetimeFormat}/${date}`,
-        'YYYY/MM/D'
-      ).toDate()
+      this.dateSelected = date.toDate()
 
       this.$emit('dateSelected', this.dateSelected)
     },
 
-    checkIsWeekend(date, isPrev = false, isNext = false) {
-      let datetimeFormat = ''
-      if (isPrev) datetimeFormat = this.$dayjs(this.datetime).subtract(1, 'month').format('YYYY-MM')
-      if (isNext) datetimeFormat = this.$dayjs(this.datetime).add(1, 'month').format('YYYY-MM')
-      if (!isNext && !isPrev) datetimeFormat = this.$dayjs(this.datetime).format('YYYY-MM')
-      const dayNumber = this.$dayjs(
-        `${datetimeFormat}-${date}`,
-        'YYYY-MM-D'
-      ).day()
+    checkIsWeekend(date) {
+      const dayNumber = date.day()
 
       let className = ''
       if (dayNumber === 0) className = 'is-sunday'
@@ -206,17 +147,10 @@ export default {
       return className
     },
 
-    checkIsHoliday(date, isPrev = false, isNext = false) {
-      let datetimeFormat = ''
-      if (isPrev) datetimeFormat = this.$dayjs(this.datetime).subtract(1, 'month').format('YYYY-MM')
-      if (isNext) datetimeFormat = this.$dayjs(this.datetime).add(1, 'month').format('YYYY-MM')
-      if (!isNext && !isPrev) datetimeFormat = this.$dayjs(this.datetime).format('YYYY-MM')
-      const dateStr = this.$dayjs(
-        `${datetimeFormat}/${date}`,
-        'YYYY-MM-D'
-      ).format('YYYY-MM-DD')
+    checkIsHoliday(date) {
+      const dateFormat = date.format(HOLIDAY_DATE_FORMAT)
 
-      return this.holiday.includes(dateStr) ? 'is-holiday' : ''
+      return this.holiday.includes(dateFormat) ? 'is-holiday' : ''
     }
   }
 }
