@@ -1,17 +1,17 @@
 <template>
   <div class="calendar">
     <h1>This is an calendar page</h1>
-    <Calendar @dateSelected='selectedDate' />
+    <CalendarWeek @dateSelected='selectedDate' />
   </div>
 </template>
 
 <script>
-import Calendar from '@/components/CalendarMonth.vue'
+import CalendarWeek from '@/components/CalendarWeek.vue'
 
 export default {
   name: 'CalendarPage',
   components: {
-    Calendar
+    CalendarWeek
   },
   methods: {
     selectedDate(date) {
