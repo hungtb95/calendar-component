@@ -1,7 +1,7 @@
 <template>
   <div class="datepicker">
     <h1>This is an datepicker page</h1>
-    <Datepicker @dateSelected='selectedDate' />
+      <Datepicker @dateSelected='selectedDate' :styles='style' />
   </div>
 </template>
 
@@ -12,6 +12,13 @@ export default {
   name: 'DatepickerPage',
   components: {
     Datepicker
+  },
+  data() {
+    return {
+      style: {
+        width: '300px'
+      }
+    }
   },
   methods: {
     selectedDate(date) {

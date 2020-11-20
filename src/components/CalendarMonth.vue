@@ -1,25 +1,27 @@
 <template>
   <div :class="['wrap-calendar-left']" :style="styles">
     <div class="head-title-calendar d-flex">
+      <span class="month-year-title mr-auto ml-auto">
+        {{ $dayjs(this.datetime).format('YYYY年MM月DD日 (ddd)') }}
+      </span>
       <div class="div-img-calendar" @click="preMonth">
         <img src="../assets/images/prev-month.png" alt srcset />
       </div>
-      <span class="month-year-title mr-auto ml-auto">
-        {{ $dayjs(this.datetime).format('YYYY/MM') }}
-      </span>
+      <button class="btn__today" @click="today">今日</button>
       <div class="div-img-calendar" @click="nextMonth">
         <img src="../assets/images/next-month.png" alt srcset />
       </div>
     </div>
+
     <div class="wrap-head-and-body">
       <div class="head-calendar">
-        <div class="column-cal">日</div>
-        <div class="column-cal">月</div>
-        <div class="column-cal">火</div>
-        <div class="column-cal">水</div>
-        <div class="column-cal">木</div>
-        <div class="column-cal">金</div>
-        <div class="column-cal">土</div>
+        <div class="column-cal">日曜日</div>
+        <div class="column-cal">月曜日</div>
+        <div class="column-cal">火曜日</div>
+        <div class="column-cal">水曜日</div>
+        <div class="column-cal">木曜日</div>
+        <div class="column-cal">金曜日</div>
+        <div class="column-cal">土曜日</div>
       </div>
 
       <div class="body-calendar">
@@ -32,7 +34,12 @@
             'day-calendar'
           ]"
         >
-          <b>{{ value }}</b>
+          <div class="box">
+            <div class="box__day">
+              <b>{{ value }}</b>
+            </div>
+            <div class="box__info"></div>
+          </div>
         </div>
 
         <div
@@ -47,7 +54,7 @@
         >
           <div
             :class="[
-              'wrap-day',
+              'box',
               { now: dateNow === value && isDateTimeNow },
               {
                 'day-active':
@@ -55,7 +62,10 @@
               },
             ]"
           >
-            {{ value }}
+            <div class="box__day">
+              <b>{{ value }}</b>
+            </div>
+            <div class="box__info"></div>
           </div>
         </div>
 
@@ -68,7 +78,12 @@
             'day-calendar'
           ]"
         >
-          <b>{{ value }}</b>
+          <div class="box">
+            <div class="box__day">
+              <b>{{ value }}</b>
+            </div>
+            <div class="box__info"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -160,6 +175,10 @@ export default {
       this.datetime = this.$dayjs(this.datetime).subtract(1, 'month').toDate()
     },
 
+    today() {
+      this.datetime = this.$dayjs().toDate()
+    },
+
     selectDate(date) {
       const datetimeFormat = this.$dayjs(this.datetime).format('YYYY/MM')
       this.dateSelected = this.$dayjs(
@@ -169,6 +188,7 @@ export default {
 
       this.$emit('dateSelected', this.dateSelected)
     },
+
     checkIsWeekend(date, isPrev = false, isNext = false) {
       let datetimeFormat = ''
       if (isPrev) datetimeFormat = this.$dayjs(this.datetime).subtract(1, 'month').format('YYYY-MM')
@@ -185,6 +205,7 @@ export default {
 
       return className
     },
+
     checkIsHoliday(date, isPrev = false, isNext = false) {
       let datetimeFormat = ''
       if (isPrev) datetimeFormat = this.$dayjs(this.datetime).subtract(1, 'month').format('YYYY-MM')
@@ -210,7 +231,7 @@ $color-sunday : #ffe1e1;
 $color-saturday : #e6f7ff;
 $color-active : #51e0db;
 
-.wrap-calendar-left{
+.wrap-calendar-left {
   width: 100%;
   font-size: 0.8rem;
   .head-title-calendar , .head-calendar , .body-calendar{
@@ -279,112 +300,15 @@ $color-active : #51e0db;
   .day-active {
     background: $color-active;
   }
+
+  .box {
+    &__day {
+      border: 1px solid;
+    }
+    &__info {
+      border: 1px solid;
+      height: 50px;
+    }
+  }
 }
-
-// .is-saturday {
-//   background: #edf9ff;
-// }
-// .is-holiday,
-// .is-sunday {
-//   background: #ffeded;
-// }
-// .wrap-calendar-left {
-//   // padding-bottom: 20px;
-//   margin-bottom: 26px;
-//   .head-title-calendar {
-//     padding: 0 10px;
-//     margin-bottom: 5px;
-//   }
-
-//   &.form-input {
-//     .head-title-calendar {
-//       .month-year-title {
-//         color: rgba(7, 163, 62, 1) !important;
-//       }
-//     }
-
-//     .body-calendar {
-//       .day-calendar {
-//         .wrap-day {
-//           &.now {
-//             color: rgba(7, 163, 62, 1) !important;
-//             font-weight: bold;
-//           }
-//           &:hover {
-//             background-color: rgba(7, 163, 62, 1) !important;
-//             color: #fff !important;
-//             font-weight: normal !important;
-//           }
-//           &.day-active {
-//             background-color: rgba(7, 163, 62, 1) !important;
-//             color: #fff !important;
-//             font-weight: normal !important;
-//           }
-//         }
-//       }
-//     }
-//   }
-
-//   .head-title-calendar {
-//     .month-year-title {
-//       font-size: 18px;
-//       font-weight: 700;
-//       color: rgba(0, 0, 0, 0.7);
-//     }
-
-//     .div-img-calendar {
-//       width: 10px;
-//     }
-//   }
-
-//   .head-calendar {
-//     display: flex;
-//     justify-content: space-between;
-
-//     .column-cal {
-//       width: calc(100% / 7);
-//       text-align: center;
-//       font-family: 'Noto Sans JP';
-//       font-size: 13px;
-//     }
-//   }
-
-//   .body-calendar {
-//     display: flex;
-//     flex-wrap: wrap;
-//     cursor: pointer;
-//     font-family: 'Noto Sans JP';
-
-//     .day-calendar {
-//       width: calc(100% / 7);
-//       text-align: center;
-//       display: flex;
-//       justify-content: center;
-//       padding-top: 15px;
-//       padding-bottom: 3px;
-
-//       .wrap-day {
-//         width: 25px;
-//         height: 25px;
-//         border-radius: 50%;
-//         transition: 0.3s;
-//         &.now {
-//           color: rgba(0, 0, 0, 0.7);
-//           font-weight: bold;
-//         }
-//         &:hover {
-//           background-color: rgba(0, 0, 0, 0.7);
-//           font-weight: normal;
-//           color: #fff;
-//           cursor: pointer;
-//         }
-//         &.day-active {
-//           background-color: rgba(0, 0, 0, 0.7);
-//           font-weight: normal;
-//           color: #fff;
-//         }
-//       }
-//     }
-//   }
-// }
 </style>
